@@ -6,7 +6,22 @@ import matplotlib.pyplot as plt
 
 plt.style.use('seaborn')
 
-#---------ANALYSIS---------------------
+#---------CALCULATOR---------------------
+def calculate_goal(Goal,Starting,Period,Return):
+    r = float(Return)
+    g = float(Goal)
+    p = float(Starting)
+    Y = float(Period)
+    
+    x = r/12
+    a = Y*12
+
+    monthly = (x*(g - p*(pow((1+x),a))))/((pow((1+x),a))-1)
+    print("+------------------------------------------------")     
+    print("|Required Monthly Savings : {:.2f}".format(monthly))     
+    print("+------------------------------------------------")     
+
+#---------SIMULATOR---------------------
 def cagr(first, last, num_periods):
     
     return ((first / last) ** (1 / (num_periods - 1)) - 1)*100.0
@@ -15,6 +30,7 @@ def calculate(initial = 0, monthly = 0, years = 0):
     COMMS = 1.055
     
     data = np.array([0.019,0.073,0.223,-0.056,0.251,0.134,-0.022,0.075,0.265,0.073,0.055,0.11,0.188,-0.338,0.064,0.163,-0.006,0.032,0.253,-0.168,-0.071,-0.062,0.252,0.161,0.226,0.26,0.335,0.021,0.137,0.042,0.203,-0.043,0.27,0.119,0.023,0.226,0.277,-0.037,0.203,0.196,-0.092,0.149,0.042,-0.032,-0.173,0.179,0.383,-0.276,-0.166,0.146,0.061,0.048,-0.152,0.043,0.152,-0.189,0.109,0.146,0.17,-0.108,0.187,-0.093,0.164,0.34,-0.128,0.023,0.208,0.44,-0.038,0.084,0.144,0.176,0.129,-0.021,0.022,-0.081,0.267,0.121,0.138,0.076,-0.154,-0.127,-0.029,0.281,-0.328,0.248,0.385,0.041,0.667,-0.231,-0.527,-0.338,-0.172,0.495,0.277,0.041,0.254,0.262,-0.027,0.215,0.123,-0.329,0.305,0.105,-0.217,-0.042,0.815])
+    
     DJI = pd.DataFrame(data,columns=['Returns'])
 
     mean = DJI['Returns'].mean()
@@ -76,24 +92,32 @@ def calculate(initial = 0, monthly = 0, years = 0):
     ax = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
 
-    ax.fill_between(capital.index,capital['25th'], capital['75th'], color='lightgreen',alpha = 0.5)
+    ax.fill_between(capital.index,capital['25th'], capital['95th'], color='lightgreen',alpha = 0.5)
 
-    capital.plot(y='25th',label="75% of having at least",alpha=0.75, title = 'Monte Carlo Simulations', xlabel = 'Years', ylabel = 'RM', ax = ax)
-    capital.plot(y='75th',label="25% of having at least",alpha=0.75, title = 'Monte Carlo Simulations', xlabel = 'Years', ylabel = 'RM', ax = ax)
+    capital.plot(y='75th',label="25% Chance of having at least",alpha=0.75, title = 'Monte Carlo Simulations', xlabel = 'Years', ylabel = 'RM', ax = ax)
+    capital.plot(y='mean',label="50% Chance of having at least",alpha=0.75, title = 'Monte Carlo Simulations', xlabel = 'Years', ylabel = 'RM', ax = ax)
     capital.plot(y='saving',label="Capital Invested",alpha=0.9, title = 'Monte Carlo Simulations', xlabel = 'Years', ylabel = 'RM', ax = ax)
 
-    ax2.fill_between(capital.index,capital['25th'], capital['75th'], color='lightgreen',alpha = 0.5)
+    ax2.fill_between(capital.index,capital['25th'], capital['95th'], color='lightgreen',alpha = 0.5)
 
     capital.plot(y='saving', color = 'red', alpha = 1, label="Savings", xlabel = 'Years', ylabel = 'RM', title = 'Median of simulations', ax = ax2)
-    capital.plot(y='75th',label="25% of having at least",alpha=0.75, title = 'Monte Carlo Simulations', xlabel = 'Years', ylabel = 'RM', ax = ax2)
-    capital.plot(y='25th',label="75% of having at least",alpha=0.75, title = 'Monte Carlo Simulations', xlabel = 'Years', ylabel = 'RM', ax = ax2)
+    capital.plot(y='75th',label="25% Chance of having at least",alpha=0.75, title = 'Monte Carlo Simulations', xlabel = 'Years', ylabel = 'RM', ax = ax2)
+    capital.plot(y='mean',label="50% Chance of having at least",alpha=0.75, title = 'Monte Carlo Simulations', xlabel = 'Years', ylabel = 'RM', ax = ax2)
     ax2.set_xlim(0,YEAR_CHECKPOINT)
     ax2.set_ylim(0,capital['95th'][capital.index[YEAR_CHECKPOINT]])
 
     inv = capital['saving'].iloc[YEAR_CHECKPOINT]
-    ret = capital['mean'].iloc[YEAR_CHECKPOINT]
+    ret75 = capital['25th'].iloc[YEAR_CHECKPOINT]
+    ret50 = capital['mean'].iloc[YEAR_CHECKPOINT]
     ret25 = capital['75th'].iloc[YEAR_CHECKPOINT]
+    ret5 = capital['95th'].iloc[YEAR_CHECKPOINT]
     
-    print("50% chance of getting return of : {:.2f}".format((ret-inv)/inv))
-    print("25% chance of getting return of : {:.2f}".format((ret25-inv)/inv))
+    print("+-------------------------------------------------------------")
+    print("|Invested amount : {:.2f}".format(inv))
+    print("+-------------------------------------------------------------")
+    print("| 5% chance of getting return of : {:.2f}".format(((ret5-inv)/inv)*100) + str(" with NAV of {:.2f} ".format(ret5)))
+    print("|25% chance of getting return of : {:.2f}".format(((ret25-inv)/inv)*100)+ str(" with NAV of {:.2f} ".format(ret25)))
+    print("|50% chance of getting return of : {:.2f}".format(((ret50-inv)/inv)*100)+ str(" with NAV of {:.2f} ".format(ret50)))
+    print("|75% chance of getting return of : {:.2f}".format(((ret75-inv)/inv)*100)+ str(" with NAV of {:.2f} ".format(ret75)))
+    print("+-------------------------------------------------------------")
     plt.show()
