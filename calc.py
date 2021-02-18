@@ -60,10 +60,13 @@ def calculate(initial = 0, monthly = 0, years = 0):
     YEAR = 30
     SAMPLE = 100
     YEARLY = MONTHLY_TOPUP * 12
+    YEARLY_NOFEES = MONTHLY_TOPUP*COMMS * 12
     saving = [INITIAL_INVESTMENT]
+    saving_nofees = [INITIAL_INVESTMENT*COMMS]
 
     for i in range(1, (YEAR+1)):
         saving.append((saving[i - 1]) + YEARLY)
+        saving_nofees.append((saving_nofees[i - 1]) + YEARLY_NOFEES)
 
     capital = pd.DataFrame(saving, columns=['saving'])
 
@@ -75,7 +78,7 @@ def calculate(initial = 0, monthly = 0, years = 0):
             capital.loc[i, str('capital' + str(k))] = (capital.loc[i - 1, str('capital' + str(k))] + YEARLY) * float(ret)
 
     total = capital.iloc[YEAR_CHECKPOINT].values.tolist()
-    wins = sum(i > capital.iloc[YEAR_CHECKPOINT]['saving'] for i in total)
+    wins = sum(i > saving_nofees[YEAR_CHECKPOINT] for i in total)
     winrate = (wins/SAMPLE)*100
 
     capital['mean'] = capital.median(axis=1)
@@ -87,8 +90,8 @@ def calculate(initial = 0, monthly = 0, years = 0):
 
     fig = plt.figure(figsize=(12, 6))
     fig.suptitle(('Average return after ' + str(YEAR_CHECKPOINT) + ' years is between %.2f ' %
-                  capital['25th'][capital.index[YEAR_CHECKPOINT]]) + 'and %.2f' % capital['75th'][capital.index[YEAR_CHECKPOINT]]
-                 + "\nWin Rate at " + str(YEAR_CHECKPOINT) + " years is " + str(winrate) + "%")
+                  capital['25th'][capital.index[YEAR_CHECKPOINT]]) + 'and %.2f' % capital['75th'][capital.index[YEAR_CHECKPOINT]])
+    
     ax = fig.add_subplot(121)
     ax2 = fig.add_subplot(122)
 
@@ -106,7 +109,7 @@ def calculate(initial = 0, monthly = 0, years = 0):
     ax2.set_xlim(0,YEAR_CHECKPOINT)
     ax2.set_ylim(0,capital['95th'][capital.index[YEAR_CHECKPOINT]])
 
-    inv = capital['saving'].iloc[YEAR_CHECKPOINT]
+    inv = saving_nofees[YEAR_CHECKPOINT]
     ret75 = capital['25th'].iloc[YEAR_CHECKPOINT]
     ret50 = capital['mean'].iloc[YEAR_CHECKPOINT]
     ret25 = capital['75th'].iloc[YEAR_CHECKPOINT]
@@ -118,6 +121,6 @@ def calculate(initial = 0, monthly = 0, years = 0):
     print("| 5% chance of getting return of at least: {:.2f}".format(((ret5-inv)/inv)*100) + str(" with NAV of {:.2f} ".format(ret5)))
     print("|25% chance of getting return of at least: {:.2f}".format(((ret25-inv)/inv)*100)+ str(" with NAV of {:.2f} ".format(ret25)))
     print("|50% chance of getting return of at least: {:.2f}".format(((ret50-inv)/inv)*100)+ str(" with NAV of {:.2f} ".format(ret50)))
-    print("|75% chance of getting return of at least: {:.2f}".format(((ret75-inv)/inv)*100)+ str(" with NAV of {:.2f} ".format(ret75)))
+    print("|Winnning rate at " + str(YEAR_CHECKPOINT) + " years is " + str(winrate) + "%")
     print("+-------------------------------------------------------------")
     plt.show()
